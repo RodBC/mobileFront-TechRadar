@@ -1,5 +1,6 @@
 node_modules/
 .expo/
+.expo
 dist/
 npm-debug.*
 *.jks
@@ -9,6 +10,10 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 web-build/
+yarn.lock
+yarn.lock/
+.expo-shared/
+.expo-shared
 
 # macOS
 .DS_Store
