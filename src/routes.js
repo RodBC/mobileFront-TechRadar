@@ -14,7 +14,7 @@ const Routes = createAppContainer(
         Profile:{
             screen:Profile,
             navigationOptions:{
-                title: 'user profile'
+                title: 'testin'
             },
         },
     }, {

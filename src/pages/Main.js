@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import MapView, {Marker, Callout} from 'react-native-maps';
 import { requestForegroundPermissionsAsync, getCurrentPositionAsync } from 'expo-location';
 import { StyleSheet, Image, Text, View, TouchableOpacity, Touchable } from 'react-native'
-import routes from '../models/UserProfile'
+import routes from '../routes'
 import { TextInput } from 'react-native-gesture-handler';
 import {  MaterialIcons  } from '@expo/vector-icons'
+import api from '../services/api';
 
 const Main = ({navigation}) => {   
-
+    const [devs, setDevs] = useState([]);
     const [currentRegion, setCurrentRegion] = useState(null);
 
     useEffect( () => {
@@ -29,25 +30,53 @@ const Main = ({navigation}) => {
         }
         loadInitialPosition();
     }, []);
+
+    async function loadDevs(){
+        const { latitude, longitude } = currentRegion;
+        const response = await api.get('/search', {
+            params:{
+                latitude,
+                longitude,
+                techs: 'ReactJS'
+            }
+        });
+        setDevs(response.data.devs);
+    }
+
+    function handleRegionChanged(region){
+        setCurrentRegion(region);
+    };
+
     if (!currentRegion){
         return null;
     }
     return (
             <>
-        <MapView initialRegion={currentRegion} style={styles.map}>
-            <Marker coordinate={{latitude: currentRegion.latitude, longitude: currentRegion.longitude }}>
-                <Image style={styles.avatar} source={{uri: 'https://avatars.githubusercontent.com/u/82513713?v=4'}}/>
-                <Callout onPress={() =>{
-                    //navigation
-                    navigation.navigate('Profile', {github_username: 'RodBC'});
-                }}>                
-                <View style={styles.devContainer}>
-                    <Text style={styles.devName}>Digao</Text>
-                    <Text style={styles.devBio}>Working@CITi</Text>
-                    <Text style={styles.devTech}>React.js React-native</Text>
-                </View>
-                </Callout>
-            </Marker>
+        <MapView onRegionChangeComplete={handleRegionChanged}
+         initialRegion={currentRegion}
+          style={styles.map}
+          >
+              {devs.map(dev => (
+                              <Marker 
+                              key={dev._id}
+                              coordinate={{
+                                  latitude: dev.location.coordinates[1],
+                                  longitude: dev.location.coordinates[0] 
+                                  }}
+                              >
+                                  <Image style={styles.avatar} source={dev.avatar_url}/>
+                                  <Callout onPress={() =>{
+                                      //navigation
+                                      navigation.navigate('Profile', {github_username: dev.github_username });
+                                  }}>                
+                                  <View style={styles.devContainer}>
+                                      <Text style={styles.devName}>{dev.name}</Text>
+                                      <Text style={styles.devBio}>{dev.bio}</Text>
+                                      <Text style={styles.devTech}>{dev.techs.join(', ')}</Text>
+                                  </View>
+                                  </Callout>
+                              </Marker> 
+              ))}
         </MapView>
                 <View style={styles.searchForm}>
                     <TextInput
@@ -57,7 +86,7 @@ const Main = ({navigation}) => {
                     autoCapitalize='words'
                     autoCorrect={false}
                     />
-                    <TouchableOpacity onPress={() => {}} style={styles.loadButton}>
+                    <TouchableOpacity onPress={loadDevs} style={styles.loadButton}>
                         <MaterialIcons name='my-location' size={20} color='#FFF'></MaterialIcons>
                     </TouchableOpacity>
                 </View>
